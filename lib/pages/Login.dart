@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:search_vehicle/main.dart';
-
+import 'dart:convert';
 import 'package:search_vehicle/pages/signup.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:http/http.dart'as http;
 import 'package:search_vehicle/pages/bezierContainer.dart';
+
+
+final userController = TextEditingController();
+final pwdController=TextEditingController();
+bool _visible=false;
+
 
 class LoginPage extends StatefulWidget {
   LoginPage({Key? key, this.title}) : super(key: key);
@@ -16,7 +22,74 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  Widget _backButton() {
+
+
+  Future login() async{
+    String url="http://carrepofetch.badak.in/";
+
+    setState(() {
+      _visible = true;
+    });
+
+
+    var data={
+      'username':userController.text,
+      'password':pwdController.text,
+    };
+
+    var response=await http.post(Uri.parse(url),body:json.encode(data));
+    if (response.statusCode==200)
+    {
+      //print(data);
+      //print(response.body);
+      var msg=jsonDecode(response.body);
+
+      if(msg['loginStatus']==true){
+        setState(() {
+          //hide progress indicator
+          print("Here");
+          _visible = false;
+          Navigator.push(context, MaterialPageRoute(builder: (BuildContext context){
+            return Homepage();
+          }));
+          userController.clear();
+          pwdController.clear();
+        });
+      }
+      else
+      {
+        showMessage("Invalid Username or password");
+
+      }
+      /*Navigator.push(
+          context, MaterialPageRoute(builder: (context) =>(uname:msg['userInfo']['NAME'])));*/
+
+
+    }
+    else
+    {
+      print("herer----");
+      setState(() {
+        _visible=false;
+        showMessage("Error during Connecting");
+      });
+    }
+  }
+  Future<dynamic> showMessage(String msg) async {
+    showDialog(context: context, builder: (BuildContext context){
+      return AlertDialog(
+        title: new Text(msg),
+        actions: [
+          TextButton(onPressed: (){
+            Navigator.of(context).pop();
+          }, child: Text("Ok"))
+        ],
+      );
+    });
+  }
+
+
+ /* Widget _backButton() {
     return InkWell(
       onTap: () {
         Navigator.pop(context);
@@ -35,9 +108,16 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
-  }
+  }*/
 
   Widget _entryField(String title, {bool isPassword = false}) {
+    var _controller;
+    if(title=='Email id'){
+      _controller=userController;
+    }
+    else if(title=='Password'){
+      _controller=pwdController;
+    }
     return Container(
       margin: EdgeInsets.symmetric(vertical: 10),
       child: Column(
@@ -51,6 +131,7 @@ class _LoginPageState extends State<LoginPage> {
             height: 10,
           ),
           TextField(
+            controller: _controller,
               obscureText: isPassword,
               decoration: InputDecoration(
                   border: InputBorder.none,
@@ -86,9 +167,8 @@ class _LoginPageState extends State<LoginPage> {
 
     ),
       onTap: (){
-        Navigator.push(context, MaterialPageRoute(builder: (BuildContext context){
-          return Homepage();
-        }));
+        login();
+
       },
     );
   }
@@ -126,59 +206,14 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  /*Widget _facebookButton() {
-    return Container(
-      height: 50,
-      margin: EdgeInsets.symmetric(vertical: 20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(10)),
-      ),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            flex: 1,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Color(0xff1959a9),
-                borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(5),
-                    topLeft: Radius.circular(5)),
-              ),
-              alignment: Alignment.center,
-              child: Text('f',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 25,
-                      fontWeight: FontWeight.w400)),
-            ),
-          ),
-          Expanded(
-            flex: 5,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Color(0xff2872ba),
-                borderRadius: BorderRadius.only(
-                    bottomRight: Radius.circular(5),
-                    topRight: Radius.circular(5)),
-              ),
-              alignment: Alignment.center,
-              child: Text('Log in with Facebook',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w400)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }*/
 
   Widget _createAccountLabel() {
     return InkWell(
       onTap: () {
         Navigator.push(
             context, MaterialPageRoute(builder: (context) => SignUpPage()));
+        userController.clear();
+        pwdController.clear();
       },
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 20),
@@ -242,7 +277,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
-    return Scaffold(
+    return WillPopScope(onWillPop:() async =>false,child:Scaffold(
         body: Container(
           height: height,
           child: Stack(
@@ -279,9 +314,9 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-              Positioned(top: 40, left: 0, child: _backButton()),
+              //Positioned(top: 40, left: 0, child: _backButton()),
             ],
           ),
-        ));
+        )));
   }
 }

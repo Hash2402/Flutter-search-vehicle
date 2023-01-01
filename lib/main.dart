@@ -9,6 +9,7 @@ import 'package:search_vehicle/pages/Pilot.dart';
 import 'package:search_vehicle/homepage/subscription.dart';
 import 'package:search_vehicle/homepage/account_info.dart';
 import 'package:search_vehicle/homepage/Vehicle_confirmation.dart';
+import 'package:search_vehicle/pages/Signup.dart';
 
 List info_list = [];
 void main() {
@@ -46,16 +47,16 @@ class _HomepageState extends State<Homepage> {
   //final controller = TextEditingController();
 
   Future getoutput() async {
-    await new Future.delayed(const Duration(milliseconds:0));
+    await new Future.delayed(const Duration(milliseconds:10));
     var response =
     await http.get(Uri.parse("http://carrepo.badak.in/"));
     if (response.statusCode == 200) {
       setState(() {
-
+        //print("Here");
         output.addAll(json.decode(response.body));
       });
       info_list = List.from(output);
-     // print(output.toString());
+     //print(output.toString());
       //print("Length is " + output.length.toString());
       return output;
     }
@@ -72,9 +73,10 @@ class _HomepageState extends State<Homepage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WillPopScope(onWillPop:()async=>false,child:Scaffold(
       appBar: AppBar(
         title: Text("Search....."),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
               onPressed: () {
@@ -86,7 +88,7 @@ class _HomepageState extends State<Homepage> {
               icon: const Icon(Icons.search))
         ],
       ),
-      body:DisplayBuild());
+      body:DisplayBuild()));
   }
 }
 
@@ -403,5 +405,92 @@ class _DisplayBuildState extends State<DisplayBuild> {
       ),
       ),
     );
+  }
+}
+
+//Two Column Search Delegate
+
+class SearchDel_twocol extends SearchDelegate {
+  //static  List searchTerms=output;
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+        onPressed: () {
+          close(context, null);
+        },
+        icon: Icon(Icons.arrow_back));
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    List<String> matchQuery = [];
+    for (var val in searchTerms) {
+      if (val.toLowerCase().contains(query.toLowerCase())) {
+        matchQuery.add(val);
+      }
+    }
+    return ListView.separated(
+      separatorBuilder: (context, int) {
+        return Divider(color: Colors.black,);
+      },
+      // shrinkWrap: true,
+      itemBuilder: (BuildContext context, int index) {
+        var res = matchQuery[index];
+        return  GridView.builder(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2),
+          itemCount: info_list.length,
+          itemBuilder: (BuildContext context, int index) {
+            final item = info_list[index];
+            //get your item data here ...
+            return Card(
+
+              child: ListTile(
+                title: Text(
+                    info_list[index].row[1]),
+              ),
+            );
+          },
+        );
+      },
+      itemCount: matchQuery.length,
+    );
+
+  }
+
+  @override
+  List<Widget>? buildActions(BuildContext context) {
+    // TODO: implement buildActions
+    return [
+      IconButton(
+          onPressed: () {
+            query = " ";
+          },
+          icon: Icon(Icons.clear)),
+    ];
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    // TODO: implement buildSuggestions
+    List<String> matchQuery = [];
+    for (var val in searchTerms) {
+      if (val.toLowerCase().contains(query.toLowerCase())) {
+        matchQuery.add(val);
+      }
+    }
+    return ListView.builder(
+        itemCount: matchQuery.length,
+        itemBuilder: (context, index) {
+          var res = matchQuery[index];
+          //print(res);
+          return ListTile(
+            title: Text(res),
+            onTap: (){
+              Navigator.push(context,MaterialPageRoute(builder: (context)=>Display(res)));
+            },
+          );
+        });
   }
 }

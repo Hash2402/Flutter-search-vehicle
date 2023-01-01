@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:search_vehicle/Pages/login.dart';
+
 
 class acc_info extends StatefulWidget {
   const acc_info({Key? key}) : super(key: key);
@@ -12,7 +14,7 @@ class _acc_infoState extends State<acc_info> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Popup Menu on AppBar"),
+        title: Text("User Information"),
         //backgroundColor: Colors.redAccent,
         actions: [
 
@@ -38,12 +40,13 @@ class _acc_infoState extends State<acc_info> {
                   PopupMenuItem<int>(
                     value: 3,
                     child: Text("Logout"),
+
                   ),
                 ];
               },
               onSelected:(value){
                 if(value == 0){
-                  print("Profile Changed");
+
                 }else if(value == 1){
                   print("KYC added");
                 }else if(value == 2){
@@ -51,6 +54,9 @@ class _acc_infoState extends State<acc_info> {
                 }
                 else if(value==3){
                   print("Signing off");
+                  Navigator.push(context, MaterialPageRoute(builder: (BuildContext context){
+                    return LoginPage();
+                  }));
                 }
               }
           ),

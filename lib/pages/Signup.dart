@@ -3,7 +3,14 @@ import 'package:search_vehicle/pages/bezierContainer.dart';
 import 'package:search_vehicle/Pages/login.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:search_vehicle/main.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
+final uname=TextEditingController();
+final pwd=TextEditingController();
+final email=TextEditingController();
+bool validate =false;
+bool _visible=false;
 class SignUpPage extends StatefulWidget {
   SignUpPage({Key ?key, this.title}) : super(key: key);
 
@@ -14,7 +21,83 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  Widget _backButton() {
+
+
+  Future signup() async{
+    String url="http://192.168.29.128/vehicle/signup.php";
+
+    setState(() {
+      _visible = true;
+    });
+
+
+    var data={
+      'username':uname.text,
+      'password':pwd.text,
+      'email':email.text,
+    };
+
+    var response=await http.post(Uri.parse(url),body:json.encode(data));
+    if (response.statusCode==200)
+    {
+      print(data);
+      print("Hereeeee");
+      if(response.body.isEmpty)
+      {
+        print("Empty");
+      }
+      print(response.body);
+      var msg=jsonDecode(response.body);
+      print(msg.toString());
+      if(msg['SignupStatus']==true){
+        setState(() {
+          //hide progress indicator
+          print("Here");
+          _visible = false;
+          Navigator.push(context, MaterialPageRoute(builder: (BuildContext context){
+            return LoginPage();
+          }));
+          uname.clear();
+          email.clear();
+          pwd.clear();
+        });
+      }
+      else
+      {
+        showMessage(msg['message']);
+
+      }
+      /*Navigator.push(
+          context, MaterialPageRoute(builder: (context) =>(uname:msg['userInfo']['NAME'])));*/
+
+
+    }
+    else
+    {
+      print("herer----");
+      setState(() {
+        _visible=false;
+        showMessage("Error during Connecting");
+      });
+    }
+  }
+  Future<dynamic> showMessage(String msg) async {
+    showDialog(context: context, builder: (BuildContext context){
+      return AlertDialog(
+        title: new Text(msg),
+        actions: [
+          TextButton(onPressed: (){
+            Navigator.of(context).pop();
+          }, child: Text("Ok"))
+        ],
+      );
+    });
+  }
+
+
+
+
+  /*Widget _backButton() {
     return InkWell(
       onTap: () {
         Navigator.pop(context);
@@ -33,9 +116,23 @@ class _SignUpPageState extends State<SignUpPage> {
         ),
       ),
     );
-  }
+  }*/
 
   Widget _entryField(String title, {bool isPassword = false}) {
+    var current_controller;
+    String method;
+    if(title=='Username'){
+      current_controller=uname;
+      method='validate_uname(current_controller)';
+    }
+    else if(title=='Email id'){
+      current_controller=email;
+      method='validate_email(current_controller)';
+    }
+    else{
+      current_controller=pwd;
+      method='validate_pwd(current_controller)';
+    }
     return Container(
       margin: EdgeInsets.symmetric(vertical: 10),
       child: Column(
@@ -49,6 +146,7 @@ class _SignUpPageState extends State<SignUpPage> {
             height: 10,
           ),
           TextField(
+            controller: current_controller,
               obscureText: isPassword,
               decoration: InputDecoration(
                   border: InputBorder.none,
@@ -83,9 +181,8 @@ class _SignUpPageState extends State<SignUpPage> {
       ),
     ),
       onTap: (){
-        Navigator.push(context, MaterialPageRoute(builder: (BuildContext context){
-          return Homepage();
-        }));
+        signup();
+
       },
     );
   }
@@ -93,9 +190,13 @@ class _SignUpPageState extends State<SignUpPage> {
   Widget _loginAccountLabel() {
     return InkWell(
       onTap: () {
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => LoginPage()));
-      },
+        Navigator.push(context, MaterialPageRoute(builder: (BuildContext context){
+          return LoginPage();
+        }));
+        uname.clear();
+        email.clear();
+        pwd.clear();
+        },
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 20),
         padding: EdgeInsets.all(15),
@@ -193,7 +294,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
               ),
             ),
-            Positioned(top: 40, left: 0, child: _backButton()),
+            //Positioned(top: 40, left: 0, child: _backButton()),
           ],
         ),
       ),
